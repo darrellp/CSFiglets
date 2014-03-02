@@ -10,7 +10,9 @@ namespace CSFiglet
 	public class CharInfo
 	{
 		#region Private Variables
-		private static readonly Regex RgxCodeTag; 
+		private static readonly Regex RgxCodeTag;
+		private readonly List<int> _leftPads = new List<int>();
+ 		private readonly List<int> _rightPads = new List<int>();
 		#endregion
 
 		#region Public Properties
@@ -37,6 +39,13 @@ namespace CSFiglet
 		} 
 		#endregion
 
+		#region Kerning
+		public int KerningOffset(CharInfo nextChar)
+		{
+			return _rightPads.Zip(nextChar._leftPads, (r, l) => r + l).Min();
+		}
+		#endregion
+
 		#region Constructor
 		/// <summary>
 		/// Read in individual character info from a font file
@@ -58,56 +67,68 @@ namespace CSFiglet
 				Val = val;
 				Comment = comment;
 			}
-			else
+			else if (!ReadCodetag(sr))
 			{
-				int codeVal;
-				string strVal;
-
-				// Read Codetag line
-				var line = sr.ReadLine();
-				if (line == null)
-				{
-					// If no more lines, we're done
-					return;
-				}
-				
-				// Match against our regular expression
-				var mtch = RgxCodeTag.Match(line);
-				var fNeg = mtch.Groups["Code"].Value.StartsWith("-");
-
-				// Read the code either as octal, hex or decimal
-				if ((strVal = mtch.Groups["Octal"].Value) != string.Empty)
-				{
-					codeVal = ParseOctal(strVal);
-					if (fNeg)
-					{
-						codeVal = -codeVal;
-					}
-				}
-				else if ((strVal = mtch.Groups["Hex"].Value) != string.Empty)
-				{
-					codeVal = ParseHex(strVal);
-					if (fNeg)
-					{
-						codeVal = -codeVal;
-					}
-				}
-				else
-				{
-					if (!int.TryParse(mtch.Groups["Code"].Value, out codeVal))
-					{
-						throw new InvalidOperationException("Invalid Codetag");
-					}
-				}
-
-				// Set our values
-				Val = codeVal;
-				Comment = mtch.Groups["Comment"].Value;
+				return;
 			}
 
+			ReadCharInfo(sr, headerInfo);
+			Valid = true;
+		}
+
+		private bool ReadCodetag(StreamReader sr)
+		{
+			int codeVal;
+			string strVal;
+
+			// Read Codetag line
+			var line = sr.ReadLine();
+			if (line == null)
+			{
+				// If no more lines, we're done
+				return false;
+			}
+
+			// Match against our regular expression
+			var mtch = RgxCodeTag.Match(line);
+			var fNeg = mtch.Groups["Code"].Value.StartsWith("-");
+
+			// Read the code either as octal, hex or decimal
+			if ((strVal = mtch.Groups["Octal"].Value) != string.Empty)
+			{
+				codeVal = ParseOctal(strVal);
+				if (fNeg)
+				{
+					codeVal = -codeVal;
+				}
+			}
+			else if ((strVal = mtch.Groups["Hex"].Value) != string.Empty)
+			{
+				codeVal = ParseHex(strVal);
+				if (fNeg)
+				{
+					codeVal = -codeVal;
+				}
+			}
+			else
+			{
+				if (!int.TryParse(mtch.Groups["Code"].Value, out codeVal))
+				{
+					throw new InvalidOperationException("Invalid Codetag");
+				}
+			}
+
+			// Set our values
+			Val = codeVal;
+			Comment = mtch.Groups["Comment"].Value;
+			return true;
+		}
+
+		private void ReadCharInfo(StreamReader sr, HeaderInfo headerInfo)
+		{
 			// Read the main character data
 			SubChars = new List<string>();
-			for (var i = 0; i < headerInfo.Height - 1; i++)
+			for (var i = 0; i < headerInfo.Height; i++)
 			{
 				var line = sr.ReadLine();
 				if (line == null)
@@ -115,37 +136,46 @@ namespace CSFiglet
 					throw new InvalidOperationException("Invalid font file");
 				}
 
-				// Drop off the terminating character
-				SubChars.Add(line.Substring(0, line.Length - 1));
+				// Drop off the terminating character - last line has two terminating characters
+				line = line.Substring(0, line.Length - (i == headerInfo.Height - 1 ? 2 : 1));
+				SubChars.Add(line);
 
 				if (i == 0)
 				{
 					// Set the width the first time through
-					Width = line.Length - 1;
+					Width = line.Length;
 				}
-				else if (Width != line.Length - 1)
+				else if (Width != line.Length)
 				{
 					// If any subsequent widths are different, we've got a problem
 					throw new InvalidOperationException("Invalid font file");
 				}
-			}
 
-			// Last line has two terminating characters
-			var lastLine = sr.ReadLine();
-			if (lastLine == null)
-			{
-				throw new InvalidOperationException("Invalid font file");
+				int left, right;
+				CalculatePadding(line, out left, out right);
+				_leftPads.Add(left);
+				_rightPads.Add(right);
 			}
-			SubChars.Add(lastLine.Substring(0, lastLine.Length - 2));
-			if (Width < 0)
+		}
+
+		private void CalculatePadding(string line, out int left, out int right)
+		{
+			left = right = -1;
+			for (var i = 0; i < line.Length; i++)
 			{
-				Width = lastLine.Length - 2;
+				if (right < 0 && line[line.Length - i - 1] != ' ')
+				{
+					right = i;
+				}
+				if (left < 0 && line[i] != ' ')
+				{
+					left = i;
+				}
+				if (right >= 0 && left >= 0)
+				{
+					break;
+				}
 			}
-			else if (Width != lastLine.Length - 2)
-			{
-				throw new InvalidOperationException("Invalid font file");
-			}
-			Valid = true;
 		}
 		#endregion
 
