@@ -1,27 +1,34 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text.RegularExpressions;
 using RegexStringLibrary;
 
 namespace CSFiglet
 {
-	class HeaderInfo
+	public class HeaderInfo
 	{
-		public int Baseline { get; set; }
-		public int MaxLength { get; set; }
-		public int OldLayout { get; set; }
-		public int CommentLines { get; set; }
-		public int PrintDirection { get; set; }
-		public int FullLayout { get; set; }
-		public int CodetagCount { get; set; }
-		public int Height { get; set; }
-		public string Signature { get; set; }
-		public char HardBlank { get; set; }
-		private static Regex _rgxHeader;
+		#region Private variables
+		private static readonly Regex RgxHeader; 
+		#endregion
 
+		#region Public Properties
+		public int Baseline { get; private set; }
+		public int MaxLength { get; private set; }
+		public int OldLayout { get; private set; }
+		public int CommentLines { get; private set; }
+		public int PrintDirection { get; private set; }
+		public int FullLayout { get; private set; }
+		public int CodetagCount { get; private set; }
+		public int Height { get; private set; }
+		public string Signature { get; private set; }
+		public char HardBlank { get; private set; }
+		public bool OptionalValuesPresent { get; private set; }
+		#endregion
+
+		#region Static Constructor
 		static HeaderInfo()
 		{
+			// Set up the regular expression to read the header
 			var signature = Stex.Any.Rep(5, 5).Named("Signature");
 			var hardBlank = ".".Named("HardBlank");
 			var height = Stex.Integer().Named("Height");
@@ -41,12 +48,14 @@ namespace CSFiglet
 				baseline, sep,
 				maxLength, sep,
 				oldLayout, sep,
-				commentLines, 
+				commentLines,
 				optionalParams);
 
-			_rgxHeader = new Regex(rgx, RegexOptions.Compiled);
-		}
+			RgxHeader = new Regex(rgx, RegexOptions.Compiled);
+		} 
+		#endregion
 
+		#region Constructor
 		private static int GetNamedInt(string name, Match match)
 		{
 			int val;
@@ -59,12 +68,17 @@ namespace CSFiglet
 
 		internal HeaderInfo(StreamReader sr)
 		{
+			// Get the line
 			var headerLine = sr.ReadLine();
 			if (headerLine == null)
 			{
 				throw new InvalidOperationException("Couldn't find header line");
 			}
-			var mtch = _rgxHeader.Match(headerLine);
+
+			// Match it against our regular expression
+			var mtch = RgxHeader.Match(headerLine);
+
+			// Pull out the values
 			Signature = mtch.Groups["Signature"].Value;
 			if (Signature != "flf2a")
 			{
@@ -78,16 +92,21 @@ namespace CSFiglet
 			CommentLines = GetNamedInt("CommentLines", mtch);
 			if (mtch.Groups["PrintDirection"].Value == string.Empty)
 			{
+				// Optional values not present - make our own values
 				PrintDirection = 0;
 				FullLayout = 0;
 				CodetagCount = 0;
+				OptionalValuesPresent = false;
 			}
 			else
 			{
+				// Optional values are present so pull them out also
 				PrintDirection = GetNamedInt("PrintDirection", mtch);
 				FullLayout = GetNamedInt("FullLayout", mtch);
 				CodetagCount = GetNamedInt("CodetagCount", mtch);
+				OptionalValuesPresent = true;
 			}
-		}
+		} 
+		#endregion
 	}
 }
