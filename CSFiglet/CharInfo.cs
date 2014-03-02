@@ -17,6 +17,19 @@ namespace CSFiglet
 		int Val { get; set; }
 		string Comment { get; set; }
 		List<string> SubChars { get; set; }
+		private static Regex _rgxCodeTag;
+
+		static CharInfo()
+		{
+			var neg = "-".Optional();
+			var octal = Stex.Cat("0", Stex.Range("0", "7").Rep(1)).Named("Octal");
+			var hex = Stex.Cat("0",
+				Stex.AnyCharFrom("Xx"),
+				Stex.AnyCharFrom("A-Fa-f0-9").Rep(1)).Named("Hex");
+			var code = neg + Stex.AnyOf(octal, hex, Stex.Integer("Decimal")).Named("Code");
+			var codeTagExpr = code + Stex.WhitePadding + Stex.Any.Rep(1).Named("Comment");
+			_rgxCodeTag = new Regex(codeTagExpr, RegexOptions.Compiled);
+		}
 
 		internal CharInfo(StreamReader sr, int val, string comment, HeaderInfo headerInfo)
 		{
@@ -34,18 +47,11 @@ namespace CSFiglet
 				{
 					return;
 				}
-				var neg = "-".Optional();
-				var octal = Stex.Cat("0", Stex.Range("0", "7").Rep(1)).Named("Octal");
-				var hex = Stex.Cat("0",
-					Stex.AnyCharFrom("Xx"),
-					Stex.AnyCharFrom("A-Fa-f0-9").Rep(1)).Named("Hex");
-				var code = neg + Stex.AnyOf(octal, hex, Stex.Integer("Decimal")).Named("Code");
-				var codeTagExpr = code + Stex.WhitePadding + Stex.Any.Rep(1).Named("Comment");
-				var regex = new Regex(codeTagExpr);
-				var mtch = regex.Match(line);
-				int codeVal = -1;
+				var mtch = _rgxCodeTag.Match(line);
+				var codeVal = -1;
 				string strVal;
-				bool fNeg = mtch.Groups["Code"].Value.StartsWith("-");
+				var fNeg = mtch.Groups["Code"].Value.StartsWith("-");
+
 				if ((strVal = mtch.Groups["Octal"].Value) != string.Empty)
 				{
 					codeVal = ParseOctal(strVal);

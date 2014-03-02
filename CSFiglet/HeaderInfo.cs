@@ -18,25 +18,11 @@ namespace CSFiglet
 		public int Height { get; set; }
 		public string Signature { get; set; }
 		public char HardBlank { get; set; }
+		private static Regex _rgxHeader;
 
-		private static int GetNamedInt(string name, Match match)
+		static HeaderInfo()
 		{
-			int val;
-			if (!int.TryParse(match.Groups[name].Value, out val))
-			{
-				throw new InvalidOperationException("Couldn't read Header");
-			}
-			return val;
-		}
-
-		internal HeaderInfo(StreamReader sr)
-		{
-			var headerLine = sr.ReadLine();
-			if (headerLine == null)
-			{
-				throw new InvalidOperationException("Couldn't find header line");
-			}
-			var signature = Stex.Any.Rep(5,5).Named("Signature");
+			var signature = Stex.Any.Rep(5, 5).Named("Signature");
 			var hardBlank = ".".Named("HardBlank");
 			var height = Stex.Integer().Named("Height");
 			var baseline = Stex.Integer().Named("Baseline");
@@ -59,8 +45,26 @@ namespace CSFiglet
 				fullLayout, sep,
 				codetagCount);
 
-			var regex = new Regex(rgx);
-			var mtch = regex.Match(headerLine);
+			_rgxHeader = new Regex(rgx, RegexOptions.Compiled);
+		}
+		private static int GetNamedInt(string name, Match match)
+		{
+			int val;
+			if (!int.TryParse(match.Groups[name].Value, out val))
+			{
+				throw new InvalidOperationException("Couldn't read Header");
+			}
+			return val;
+		}
+
+		internal HeaderInfo(StreamReader sr)
+		{
+			var headerLine = sr.ReadLine();
+			if (headerLine == null)
+			{
+				throw new InvalidOperationException("Couldn't find header line");
+			}
+			var mtch = _rgxHeader.Match(headerLine);
 			Signature = mtch.Groups["Signature"].Value;
 			if (Signature != "flf2a")
 			{
