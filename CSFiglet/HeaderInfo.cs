@@ -33,6 +33,7 @@ namespace CSFiglet
 			var fullLayout = Stex.Integer().Named("FullLayout");
 			var codetagCount = Stex.Integer().Named("CodetagCount");
 			var sep = Stex.WhitePadding;
+			var optionalParams = Stex.Cat(sep, printDirection, sep, fullLayout, sep, codetagCount).Optional();
 			var rgx = Stex.Cat(
 				signature,
 				hardBlank, sep,
@@ -40,13 +41,12 @@ namespace CSFiglet
 				baseline, sep,
 				maxLength, sep,
 				oldLayout, sep,
-				commentLines, sep,
-				printDirection, sep,
-				fullLayout, sep,
-				codetagCount);
+				commentLines, 
+				optionalParams);
 
 			_rgxHeader = new Regex(rgx, RegexOptions.Compiled);
 		}
+
 		private static int GetNamedInt(string name, Match match)
 		{
 			int val;
@@ -76,9 +76,18 @@ namespace CSFiglet
 			MaxLength = GetNamedInt("MaxLength", mtch);
 			OldLayout = GetNamedInt("OldLayout", mtch);
 			CommentLines = GetNamedInt("CommentLines", mtch);
-			PrintDirection = GetNamedInt("PrintDirection", mtch);
-			FullLayout = GetNamedInt("FullLayout", mtch);
-			CodetagCount = GetNamedInt("CodetagCount", mtch);
+			if (mtch.Groups["PrintDirection"].Value == string.Empty)
+			{
+				PrintDirection = 0;
+				FullLayout = 0;
+				CodetagCount = 0;
+			}
+			else
+			{
+				PrintDirection = GetNamedInt("PrintDirection", mtch);
+				FullLayout = GetNamedInt("FullLayout", mtch);
+				CodetagCount = GetNamedInt("CodetagCount", mtch);
+			}
 		}
 	}
 }
