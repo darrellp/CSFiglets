@@ -21,7 +21,18 @@ namespace CSFiglet
 		public int Width { get; private set; }
 		public int Val { get; private set; }
 		public string Comment { get; private set; }
-		public List<string> SubChars { get; private set; } 
+		public List<string> SubChars { get; private set; }
+
+		public List<int> LeftPads
+		{
+			get { return _leftPads; }
+		}
+
+		public List<int> RightPads
+		{
+			get { return _rightPads; }
+		}
+
 		#endregion
 
 		#region Static Constructor
@@ -42,7 +53,15 @@ namespace CSFiglet
 		#region Kerning
 		public int KerningOffset(CharInfo nextChar)
 		{
-			return _rightPads.Zip(nextChar._leftPads, (r, l) => r + l).Min();
+			var val = RightPads.Zip(nextChar.LeftPads, (r, l) => (r == - 1 || l == - 1 ? int.MaxValue : (r + l))).Min();
+			if (val == int.MaxValue)
+			{
+				// If there is nothing intersecting between the two characters then use 0
+				// padding - we can't slide the character back infinitely just because there's
+				// nothing in the other character to clash with it.
+				val = 0;
+			}
+			return val;
 		}
 		#endregion
 
@@ -151,10 +170,12 @@ namespace CSFiglet
 					throw new InvalidOperationException("Invalid font file");
 				}
 
+				// TODO: Check whether we need to keep hard spaces around after keeping the padding
+				// If they're only used for the endpoints of regions then the padding should take care of it
 				int left, right;
 				CalculatePadding(line, out left, out right);
-				_leftPads.Add(left);
-				_rightPads.Add(right);
+				LeftPads.Add(left);
+				RightPads.Add(right);
 			}
 		}
 

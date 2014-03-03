@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arranger.cs" />
     <Compile Include="CharInfo.cs" />
     <Compile Include="FigletFont.cs" />
     <Compile Include="HeaderInfo.cs" />

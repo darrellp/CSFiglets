@@ -25,7 +25,12 @@ namespace FigletTester
 		{
 			InitializeComponent();
 			var names = FigletFont.Names();
-			var font = FigletFont.FigletFromName(names[0]);
+			foreach (var name in names)
+			{
+				var font = FigletFont.FigletFromName(name);
+				var arranger = new Arranger(font) {Text = "Darrell"};
+				Console.WriteLine(arranger.StringContents);
+			}
 		}
 	}
 }
