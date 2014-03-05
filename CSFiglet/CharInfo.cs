@@ -166,7 +166,7 @@ namespace CSFiglet
 			if (rule.HasFlag(HSmushRule.Heirarchy))
 			{
 				const string heirarchyChars = @"|/\[]{}()<>";
-				var breaks = new int[] {1, 3, 5, 7, 9};
+				var breaks = new[] {1, 3, 5, 7, 9};
 
 				foreach (var iBreak in breaks)
 				{

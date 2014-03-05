@@ -59,13 +59,13 @@ namespace CSFiglet
 				_contents.Add(new StringBuilder());
 			}
 
-			var lShiftCur = 0;				// Amount to "shift" right char into the left one
+			var lShiftCur = 0;							// Amount to "shift" right char into the left one
 			var chPrev = (char)0;
 			var rightBorder = 0;
 			foreach(var ch in _text)
 			{
 				var curChar = _font.Chars[ch];
-				var smushable = false;		// True if the characters can be smushed
+				var smushable = false;					// True if the characters can be smushed
 
 				if (CharacterSpacing == CharacterSpacing.FullWidth)
 				{
