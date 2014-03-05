@@ -46,7 +46,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringExtensions.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\Alligator.flf" />
+    <EmbeddedResource Include="Fonts\Alligator2.flf" />
+    <EmbeddedResource Include="Fonts\Alphabet.flf" />
+    <EmbeddedResource Include="Fonts\Avatar.flf" />
+    <EmbeddedResource Include="Fonts\banner3-D.flf" />
+    <EmbeddedResource Include="Fonts\Banner3.flf" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Fonts\banner.flf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

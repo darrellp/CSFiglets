@@ -2,8 +2,31 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text.RegularExpressions;
 using RegexStringLibrary;
+
+[Flags]
+public enum HSmushRule
+{
+	NoSmush = -1,
+	Universal = 0,
+	EqualCharacter = 1,
+	Underscore = 2,
+	Heirarchy = 4,
+	OppositePair = 8,
+	BigX = 16,
+	HardBlank = 32,
+	KerningByDefault = 64,
+	SmushingByDefault = 128
+}
+
+public enum CharacterSpacing
+{
+	FullWidth,
+	Kerning,
+	Smushing
+}
 
 namespace CSFiglet
 {
@@ -11,8 +34,11 @@ namespace CSFiglet
 	{
 		#region Private Variables
 		private static readonly Regex RgxCodeTag;
+		private readonly char _hardBlank;
 		private readonly List<int> _leftPads = new List<int>();
  		private readonly List<int> _rightPads = new List<int>();
+		private readonly List<char> _lChars = new List<char>();
+		private readonly List<char> _rChars = new List<char>();
 		#endregion
 
 		#region Public Properties
@@ -51,9 +77,24 @@ namespace CSFiglet
 		#endregion
 
 		#region Kerning
-		public int KerningOffset(CharInfo nextChar)
+		public int KerningOffset(CharInfo nextChar, HSmushRule smushRule, out bool smushable)
 		{
-			var val = RightPads.Zip(nextChar.LeftPads, (r, l) => (r == - 1 || l == - 1 ? int.MaxValue : (r + l))).Min();
+			var val = int.MaxValue;
+			smushable = smushRule != HSmushRule.NoSmush && Width > 1 && nextChar.Width > 1;
+
+			for (var iRow = 0; iRow < SubChars.Count; iRow++)
+			{
+				var r = RightPads[iRow];
+				var l = nextChar.LeftPads[iRow];
+				if (r == -1 || l == -1)
+				{
+					continue;
+				}
+				val = Math.Min(val, r + l);
+
+				smushable = smushable &&
+					CheckSmushability(smushRule, _rChars[iRow], nextChar._lChars[iRow], _hardBlank) != '\0';
+			}
 			if (val == int.MaxValue)
 			{
 				// If there is nothing intersecting between the two characters then use 0
@@ -62,6 +103,124 @@ namespace CSFiglet
 				val = 0;
 			}
 			return val;
+		}
+
+		internal static char CheckSmushability(HSmushRule rule, char lChar, char rChar, char hardBlank)
+		{
+			if (rChar == ' ')
+			{
+				return lChar;
+			}
+			if (lChar == ' ')
+			{
+				return rChar;
+			}
+
+			if (rChar == lChar && rChar != hardBlank)
+			{
+				return rChar;
+			}
+
+			if (rule == HSmushRule.Universal)
+			{
+				if (rChar == ' ' || rChar == hardBlank)
+				{
+					return lChar;
+				}
+				return rChar;
+			}
+
+			if (rule.HasFlag(HSmushRule.HardBlank))
+			{
+				if (rChar == hardBlank && lChar == hardBlank)
+				{
+					return hardBlank;
+				}
+			}
+
+			if (lChar == hardBlank || rChar == hardBlank)
+			{
+				return '\0';
+			}
+
+			if (rule.HasFlag(HSmushRule.EqualCharacter))
+			{
+				if (lChar == rChar)
+				{
+					return lChar;
+				}
+			}
+
+			if (rule.HasFlag(HSmushRule.Underscore))
+			{
+				if (lChar == '_' && @"|/\[]{}()<>".Contains(rChar))
+				{
+					return rChar;
+				}
+				if (rChar == '_' && @"|/\[]{}()<>".Contains(lChar))
+				{
+					return lChar;
+				}
+			}
+
+			if (rule.HasFlag(HSmushRule.Heirarchy))
+			{
+				const string heirarchyChars = @"|/\[]{}()<>";
+				var breaks = new int[] {1, 3, 5, 7, 9};
+
+				foreach (var iBreak in breaks)
+				{
+					int ch1, ch2;
+					if (iBreak == 1)
+					{
+						ch1 = ch2 = heirarchyChars[0];
+					}
+					else
+					{
+						ch1 = heirarchyChars[iBreak - 2];
+						ch2 = heirarchyChars[iBreak - 1];
+					}
+					if ((lChar == ch1 || lChar == ch2) && heirarchyChars.Substring(iBreak).Contains(rChar))
+					{
+						return rChar;
+					}
+					if ((rChar == ch1 || rChar == ch2) && heirarchyChars.Substring(iBreak).Contains(lChar))
+					{
+						return lChar;
+					}
+				}
+			}
+
+			if (rule.HasFlag(HSmushRule.OppositePair))
+			{
+				const string pairs = "[]{}()";
+				for (int i = 0; i < 6; i += 2)
+				{
+					if (lChar == pairs[i] && rChar == pairs[i + 1] ||
+						rChar == pairs[i] && lChar == pairs[i + 1])
+					{
+						return '|';
+					}
+				}
+			}
+
+			if (rule.HasFlag(HSmushRule.BigX))
+			{
+				if (lChar == '/' && rChar == '\\')
+				{
+					return '|';
+				}
+				if (lChar == '\\' && rChar == '/')
+				{
+					return 'Y';
+				}
+				if (lChar == '>' && rChar == '<')
+				{
+					return 'X';
+				}
+			}
+
+			return '\0';
 		}
 		#endregion
 
@@ -78,6 +237,7 @@ namespace CSFiglet
 			// Initialization
 			CodeTag = val == -1;
 			Valid = false;
+			_hardBlank = headerInfo.HardBlank;
 
 			// If we're not a codetag
 			if (!CodeTag)
@@ -173,24 +333,30 @@ namespace CSFiglet
 				// TODO: Check whether we need to keep hard spaces around after keeping the padding
 				// If they're only used for the endpoints of regions then the padding should take care of it
 				int left, right;
-				CalculatePadding(line, out left, out right);
+				char chLeft, chRight;
+				CalculatePadding(line, out left, out right, out chLeft, out chRight);
 				LeftPads.Add(left);
 				RightPads.Add(right);
+				_lChars.Add(chLeft);
+				_rChars.Add(chRight);
 			}
 		}
 
-		private void CalculatePadding(string line, out int left, out int right)
+		private void CalculatePadding(string line, out int left, out int right, out char chLeft, out char chRight)
 		{
 			left = right = -1;
+			chRight = chLeft = ' ';
 			for (var i = 0; i < line.Length; i++)
 			{
 				if (right < 0 && line[line.Length - i - 1] != ' ')
 				{
 					right = i;
+					chRight = line[line.Length - i - 1];
 				}
 				if (left < 0 && line[i] != ' ')
 				{
 					left = i;
+					chLeft = line[i];
 				}
 				if (right >= 0 && left >= 0)
 				{

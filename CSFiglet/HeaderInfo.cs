@@ -14,10 +14,10 @@ namespace CSFiglet
 		#region Public Properties
 		public int Baseline { get; private set; }
 		public int MaxLength { get; private set; }
-		public int OldLayout { get; private set; }
+		public HSmushRule OldLayout { get; private set; }
 		public int CommentLines { get; private set; }
 		public int PrintDirection { get; private set; }
-		public int FullLayout { get; private set; }
+		public HSmushRule FullLayout { get; private set; }
 		public int CodetagCount { get; private set; }
 		public int Height { get; private set; }
 		public string Signature { get; private set; }
@@ -88,7 +88,7 @@ namespace CSFiglet
 			Height = GetNamedInt("Height", mtch);
 			Baseline = GetNamedInt("Baseline", mtch);
 			MaxLength = GetNamedInt("MaxLength", mtch);
-			OldLayout = GetNamedInt("OldLayout", mtch);
+			OldLayout = (HSmushRule)GetNamedInt("OldLayout", mtch);
 			CommentLines = GetNamedInt("CommentLines", mtch);
 			if (mtch.Groups["PrintDirection"].Value == string.Empty)
 			{
@@ -102,7 +102,7 @@ namespace CSFiglet
 			{
 				// Optional values are present so pull them out also
 				PrintDirection = GetNamedInt("PrintDirection", mtch);
-				FullLayout = GetNamedInt("FullLayout", mtch);
+				FullLayout = (HSmushRule)GetNamedInt("FullLayout", mtch);
 				CodetagCount = GetNamedInt("CodetagCount", mtch);
 				OptionalValuesPresent = true;
 			}
