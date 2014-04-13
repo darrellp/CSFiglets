@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -116,7 +115,6 @@ namespace CSFiglet
 					}
 					stagedCharCount = 0;
 					lShiftCur = 0;
-					chPrev = (char) 0;
 					rightBorder = 0;
 				}
 				stagedCharCount++;
