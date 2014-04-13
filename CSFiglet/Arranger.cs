@@ -118,7 +118,7 @@ namespace CSFiglet
 					rightBorder = 0;
 				}
 				stagedCharCount++;
-				SetText(0, rightBorder - lShiftCur, rightBorder, curChar, DoSmush && smushable);
+				SetText(rightBorder - lShiftCur, rightBorder, curChar, DoSmush && smushable);
 				rightBorder += curChar.Width - lShiftCur;
 				chPrev = ch;
 			}
@@ -158,28 +158,28 @@ namespace CSFiglet
 			}
 		}
 
-		internal void SetText(int row, int column, int curWidth, CharInfo charInfo, bool doSmush)
+		internal void SetText(int column, int curLineWidth, CharInfo charInfo, bool doSmush)
 		{
 			var rowCount = charInfo.SubChars.Count;
 
-			for (var iRow = row; iRow < row + rowCount; iRow++)
+			for (var iRow = 0; iRow < rowCount; iRow++)
 			{
 				// Left padding for our righthand character
-				var lPadding = charInfo.LeftPads[iRow - row];
+				var lPadding = charInfo.LeftPads[iRow];
 				if (lPadding == -1)
 				{
 					// lPadding == -1 conventionally means no subchars in this row so we just
 					// append on the proper amount of spacing and continue on
-					_stagingArea[iRow].Append(new string(' ', charInfo.Width - curWidth + column));
+					_stagingArea[iRow].Append(new string(' ', charInfo.Width - curLineWidth + column));
 					continue;
 				}
 
 				// absolute column start of non-padding portion of the character
 				var colStart = column + lPadding;
 				// New string we want to place into the row
-				var replacementText = charInfo.SubChars[iRow - row];
+				var replacementText = charInfo.SubChars[iRow];
 
-				if (curWidth > colStart)
+				if (curLineWidth > colStart)
 				{
 					// We have to actually replace part of the last character we've already placed - i.e., we're
 					// kerning into the body of the previous character.
@@ -200,13 +200,13 @@ namespace CSFiglet
 						colStart++;
 					}
 					// Eliminate blanks that need replacing
-					_stagingArea[iRow].Remove(colStart, curWidth - colStart);
+					_stagingArea[iRow].Remove(colStart, curLineWidth - colStart);
 				}
 				else
 				{
 					// The replacement comes after our current last column so include
 					// some of his padding to position him correctly
-					lPadding -= colStart - curWidth;
+					lPadding -= colStart - curLineWidth;
 				}
 				
 				// Put the replacement text in properly
