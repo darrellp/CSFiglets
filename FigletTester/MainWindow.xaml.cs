@@ -16,7 +16,7 @@ namespace FigletTester
 			foreach (var name in names)
 			{
 				var font = FigletFont.FigletFromName(name);
-				var arranger = new Arranger(font, 100) {Text = name};
+				var arranger = new Arranger(font, 100, Justify.Center) {Text = name};
 				Console.WriteLine(arranger.StringContents);
 			}
 		}

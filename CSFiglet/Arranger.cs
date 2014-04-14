@@ -1,9 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
 namespace CSFiglet
 {
+	public enum Justify
+	{
+		Left,
+		Center,
+		Right
+	};
+
 	public class Arranger
 	{
 		#region Private variables
@@ -11,6 +19,7 @@ namespace CSFiglet
 		private readonly List<StringBuilder> _stagingArea; 
 		private readonly FigletFont _font;
 		private string _text;
+		private Justify _justify;
 		#endregion
 
 		#region Properties
@@ -63,10 +72,11 @@ namespace CSFiglet
 		#endregion
 
 		#region Constructor
-		public Arranger(FigletFont font, int maxWidth = int.MaxValue)
+		public Arranger(FigletFont font, int maxWidth = int.MaxValue, Justify justify = Justify.Left)
 		{
 			_stagingArea = new List<StringBuilder>();
 			_font = font;
+			_justify = justify;
 			MaxWidth = maxWidth;
 			SetCharSpacing();
 			for (var iRow = 0; iRow < _font.Header.Height; iRow++)
@@ -84,6 +94,7 @@ namespace CSFiglet
 			var chPrev = (char)0;
 			var rightBorder = 0;
 			var stagedCharCount = 0;
+
 			foreach(var ch in _text)
 			{
 				var curChar = _font.Chars[ch];
@@ -107,7 +118,7 @@ namespace CSFiglet
 				if (rightBorder + curChar.Width - lShiftCur > MaxWidth && stagedCharCount != 0)
 				{
 					// Yes, move the staging text to contents
-					TransferStagingToContents(0);
+					TransferStagingToContents(Padding(rightBorder));
 					// ...and clear the staging area
 					foreach (var stagingRow in _stagingArea)
 					{
@@ -122,7 +133,28 @@ namespace CSFiglet
 				rightBorder += curChar.Width - lShiftCur;
 				chPrev = ch;
 			}
-			TransferStagingToContents(0);
+
+			TransferStagingToContents(Padding(rightBorder));
+		}
+
+		private int Padding(int rightBorder)
+		{
+			int padding = 0;
+			switch (_justify)
+			{
+				case Justify.Center:
+					padding = (MaxWidth - rightBorder) / 2;
+					break;
+
+				case Justify.Right:
+					padding = MaxWidth - rightBorder;
+					break;
+
+				default:
+					padding = 0;
+					break;
+			}
+			return padding;
 		}
 
 		private void TransferStagingToContents(int padding)
