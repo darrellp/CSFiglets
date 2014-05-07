@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -19,7 +18,8 @@ namespace CSFiglet
 		private readonly List<StringBuilder> _stagingArea; 
 		private readonly FigletFont _font;
 		private string _text;
-		private Justify _justify;
+		private readonly Justify _justify;
+		private bool _noSmush;
 		#endregion
 
 		#region Properties
@@ -27,7 +27,21 @@ namespace CSFiglet
 		{
 			get
 			{
-				return SmushRule != HSmushRule.NoSmush;
+				return !NoSmush && SmushRule != HSmushRule.NoSmush;
+			}
+		}
+
+		public bool NoSmush
+		{
+			get { return _noSmush; }
+			set
+			{
+				if (value != _noSmush)
+				{
+					ClearStage();
+					_noSmush = value;
+					Arrange();
+				}
 			}
 		}
 
@@ -79,6 +93,13 @@ namespace CSFiglet
 			_justify = justify;
 			MaxWidth = maxWidth;
 			SetCharSpacing();
+			NoSmush = false;
+			ClearStage();
+		}
+
+		private void ClearStage()
+		{
+			_stagingArea.Clear();
 			for (var iRow = 0; iRow < _font.Header.Height; iRow++)
 			{
 				_stagingArea.Add(new StringBuilder());
@@ -107,7 +128,7 @@ namespace CSFiglet
 				}
 				else if (chPrev != 0)
 				{
-					lShiftCur = _font.Chars[chPrev].KerningOffset(curChar, SmushRule, out smushable);
+					lShiftCur = _font.Chars[chPrev].KerningOffset(curChar, NoSmush ? HSmushRule.NoSmush : SmushRule, out smushable);
 					if (smushable && DoSmush)
 					{
 						lShiftCur++;
@@ -139,7 +160,7 @@ namespace CSFiglet
 
 		private int Padding(int rightBorder)
 		{
-			int padding = 0;
+			int padding;
 			switch (_justify)
 			{
 				case Justify.Center:
