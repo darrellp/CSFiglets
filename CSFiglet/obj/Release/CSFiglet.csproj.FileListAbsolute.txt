@@ -1,0 +1,14 @@
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Release\Fonts\banner.flf
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Release\CSFiglet.dll
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Release\CSFiglet.pdb
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.csprojAssemblyReference.cache
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.csproj.CoreCompileInputs.cache
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.dll
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.pdb
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Release\Fonts\banner.flf
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Release\CSFiglet.dll
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Release\CSFiglet.pdb
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.csproj.AssemblyReference.cache
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.csproj.CoreCompileInputs.cache
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.dll
+E:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Release\CSFiglet.pdb

@@ -1,0 +1,13 @@
+C:\Users\jar_c\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Debug\Fonts\banner.flf
+C:\Users\jar_c\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Debug\CSFiglet.dll
+C:\Users\jar_c\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Debug\CSFiglet.pdb
+C:\Users\jar_c\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.csproj.CoreCompileInputs.cache
+C:\Users\jar_c\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.dll
+C:\Users\jar_c\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.pdb
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Debug\Fonts\banner.flf
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Debug\CSFiglet.dll
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\bin\Debug\CSFiglet.pdb
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.csproj.CoreCompileInputs.cache
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.dll
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.pdb
+D:\OneDrive\Documents\My Projects\csfiglets\CSFiglet\obj\Debug\CSFiglet.csprojAssemblyReference.cache
